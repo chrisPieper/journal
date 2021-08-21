@@ -4,8 +4,8 @@ from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired
 
 class EventForm(FlaskForm):
-    text = TextAreaField('Description', validators=[DataRequired()])
     date = DateField('Date', validators=[DataRequired()])
     type = StringField('Type', validators=[])
+    text = TextAreaField('Description', validators=[DataRequired()])
     submit = SubmitField('Submit')
 

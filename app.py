@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, session, url_for
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_mongoengine import MongoEngine
+from flask_table import Table, Col, DateCol
 from wtforms.validators import DataRequired
 
 from event import EventForm
@@ -33,6 +34,13 @@ class Journal(db.Document):
         return {"date": self.date,
                 "type": self.type,
                 "text": self.text}
+
+
+# Flask Journal table model
+class JournalTable(Table):
+    date = DateCol('Date')
+    type = Col('Type')
+    text = Col('Description')
 
 
 # Error handlers
@@ -71,11 +79,25 @@ def change():
 @app.route('/result', methods=['GET', 'POST'])
 def result():
     date = request.args.get('date')
-    journal = Journal.objects()
-    print(journal[0].to_json())
-    print(journal[1].to_json())
+    entries = Journal.objects()
+    print (len(entries))
+    for entry in entries:
+        print(entry.date)
+        print(entry.type)
+        print(entry.text)
     table = ResultsForm()
-    return render_template('results.html', table=table, name=session.get('name'))
+    return render_template('results.html', table=entries, name=session.get('name'))
+
+    # connect to database
+    db = client.blog
+
+    # specify the collections name
+    posts = db.posts
+
+    # convert the mongodb object to a list
+    data = list(posts.find())
+
+    return render_template('mongo_index.html', blog_info=data)
 
 
 # Delete data

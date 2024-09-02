@@ -1,28 +1,41 @@
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, g
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
-from flask_mongoengine import MongoEngine
 from flask_table import Table, Col, DateCol
 from wtforms.validators import DataRequired
 
 from event import EventForm
 from dateevents import DateEventsForm
+import sqlite3
 from results import ResultsForm
+
+DATABASE = './database.db'
+
 
 app = Flask(__name__)
 # app.config.from_pyfile('the-config.cfg')
 app.config['SECRET_KEY'] = 'around the bend'
-app.config['MONGODB_SETTINGS'] = {
-    'db': 'journal_database',
-    'host': 'localhost',
-    'port': 27017
-}
 
 bootstrap = Bootstrap(app)
 moment = Moment(app)
-db = MongoEngine()
-db.init_app(app)
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+# specify the collections name
+posts = get_db().posts
+
+get_db().init_app(app)
 
 
 # Data model
@@ -93,12 +106,6 @@ def result():
 
     # specify the collections name
     posts = db.posts
-
-    # convert the mongodb object to a list
-    data = list(posts.find())
-
-    return render_template('mongo_index.html', blog_info=data)
-
 
 # Delete data
 
